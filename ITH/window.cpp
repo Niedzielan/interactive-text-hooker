@@ -24,7 +24,7 @@
 #include <ITH\IHF_SYS.h>
 #include <ITH\Hash.h>
 #include <ITH\HookManager.h>
-
+#include <ITH\version.h>
 #define CMD_SIZE 0x200
 
 LPWSTR import_buffer;
@@ -1173,8 +1173,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					static WCHAR version_info[0x100];
 					static const WCHAR program_name[] = L"Interactive Text Hooker";
-					static const WCHAR program_version[] = L"3.1";
-					swprintf(version_info, L"%s %s", program_name, program_version);
+					static const WCHAR program_version[] = L"3.0";
+					swprintf(version_info, L"%s %s (%s)", program_name, program_version, build_date);
 					man->AddConsoleOutput(version_info);
 					man->AddConsoleOutput(InitMessage);
 				}
@@ -1873,13 +1873,25 @@ void ProcessWindow::RefreshThreadColumns(DWORD pid)
 	if (status == 0) return;
 
 	SYSTEM_THREAD* base = (SYSTEM_THREAD*)((DWORD)spiProcessInfo + sizeof(SYSTEM_PROCESS_INFORMATION));
-	DWORD dwLimit = (DWORD)spiProcessInfo -> usName.Buffer;
-	//int i = 0;
-	while ((DWORD)base < dwLimit)
+	DWORD dwLimit; // = (DWORD)spiProcessInfo -> usName.Buffer;
+
+	/* so much fail on Windows 10 in this section */
+
+	//while ((DWORD)base < dwLimit)
+	for (dwLimit = spiProcessInfo -> dThreadCount; dwLimit > 0; dwLimit--)
 	{
 		PerformThread(base);
-		LPWSTR state= (base -> dThreadState == StateWait)?				
-			WaitReasonString[base -> WaitReason] : StateString[base -> dThreadState];
+		LPWSTR state = L"???";
+		if (base -> dThreadState == StateWait)
+		{
+			if (base -> WaitReason < (sizeof(WaitReasonString) / sizeof(WaitReasonString[0])))
+				state = WaitReasonString[base -> WaitReason];
+		}
+		else
+		{
+			if (base -> dThreadState >= 0 && base->dThreadState < (sizeof(StateString) / sizeof(StateString[0])))
+				state = StateString[base -> dThreadState];
+		}
 		ListView_SetItemText(hlThread, 0, 3, state);
 		base++;
 		//i++;
