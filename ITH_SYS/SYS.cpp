@@ -525,7 +525,7 @@ int MB_WC(char* mb, wchar_t* wc)
 }
 	
 //Count characters of 'mb' string. 'mb_length' is max length.
-int MB_WC_count(char* mb, int mb_length)
+/*int MB_WC_count(char* mb, int mb_length)
 {
 	__asm
 	{
@@ -545,10 +545,15 @@ _mbc_count:
 		ja _mbc_count
 _mbc_finish:
 	}
+}*/
+	
+int MB_WC_count(char* mb, int mb_length)
+{
+	return MultiByteToWideChar(932, 0, mb, mb_length, NULL, 0);
 }
 
 //Unicode->SJIS. Analogous to MB_WC.
-int WC_MB(wchar_t *wc, char* mb)
+/*int WC_MB(wchar_t *wc, char* mb)
 {
 	__asm
 	{
@@ -574,7 +579,13 @@ _wc_single:
 _wc_fin:
 		mov eax,ebx
 	}
+}*/
+	
+int WC_MB(wchar_t *wc, char* mb)
+{
+	return WideCharToMultiByte(932, 0, wc, -1, mb, strlen(mb), NULL, NULL);
 }
+	
 void FreeThreadStart(HANDLE hProc)
 {
 	thread_man->ReleaseProcessMemory(hProc);
