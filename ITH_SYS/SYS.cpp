@@ -485,7 +485,7 @@ LPWSTR GetModulePath()
 	}
 }
 //SJIS->Unicode. 'mb' must be null-terminated. 'wc' should have enough space ( 2*strlen(mb) is safe).
-int MB_WC(char* mb, wchar_t* wc)
+/*int MB_WC(char* mb, wchar_t* wc)
 {
 	__asm
 	{
@@ -517,8 +517,13 @@ _mb_next:
 _mb_fin:
 		pop eax
 	}
-}
+}*/
 
+int MB_WC(char* mb, wchar_t* wc)
+{
+	return MultiByteToWideChar(932, 0, mb, -1, wc, 2 * strlen(mb));
+}
+	
 //Count characters of 'mb' string. 'mb_length' is max length.
 int MB_WC_count(char* mb, int mb_length)
 {
@@ -1014,7 +1019,9 @@ HANDLE IthCreateThread(LPVOID start_addr, DWORD param, HANDLE hProc)
 		NtResumeThread(hThread,0);
 		return hThread;
 	}
-	return INVALID_HANDLE_VALUE;
+	//return INVALID_HANDLE_VALUE;
+	hThread = CreateRemoteThread(hProc, NULL, DEFAULT_STACK_LIMIT, (LPTHREAD_START_ROUTINE)start_addr, (LPVOID)param, 0, NULL);
+	return hThread;
 }
 //Query module export table. Return function address if found.
 //Similar to GetProcAddress
